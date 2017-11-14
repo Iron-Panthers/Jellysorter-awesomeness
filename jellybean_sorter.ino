@@ -3,7 +3,14 @@
 
 #include <Adafruit_TCS34725.h>
 
-const int SERVO_PIN = 5;
+#define SERVO_PIN 5
+
+const int SERVO_NEUTRAL = 90;
+const int SERVO_LEFT = 150;
+const int SERVO_RIGHT = 30;
+
+const int COLOR_SENSOR_DELAY = 500;
+const int SERVO_DELAY = 500;
 
 Servo servo;
 
@@ -16,6 +23,7 @@ void setup() {
     Serial.println("Found sensor");
   } else {
     Serial.println("No color sensor found");
+    while (true) {}
   }
   servo.attach(SERVO_PIN);
 }
@@ -23,7 +31,7 @@ void setup() {
 void loop() {
   uint16_t r, g, b, c, colorTemp, lux;
   tcs.getRawData(&r, &g, &b, &c);
-  colorTemp = tcs.calculateColorTemperature(r, g, b);
+  //colorTemp = tcs.calculateColorTemperature(r, g, b);
   lux = tcs.calculateLux(r, g, b);
   Serial.print("Color: ");
   Serial.print(r);
@@ -34,9 +42,22 @@ void loop() {
   Serial.print("\t");
   Serial.println(c);
 
-  if (r > 10) {
-    
+  if (lux > 18000) {
+    Serial.println("Detected an increase in light");
+    delay(COLOR_SENSOR_DELAY);
+    if (r > 18000) {
+      Serial.println("Detected a left bucket jellybean");
+      servo.write(SERVO_LEFT);
+      delay(SERVO_DELAY);
+    } else {
+      Serial.println("Detected a right bucket jellybean");
+      servo.write(SERVO_RIGHT);
+      delay(SERVO_DELAY);
+    }
+    servo.write(SERVO_NEUTRAL);
+    delay(SERVO_DELAY);
   }
   
   Serial.println();
+  delay(10);
 }
