@@ -4,12 +4,19 @@
 #include <Adafruit_TCS34725.h>
 
 #define SERVO_PIN 5
+#define LED_PIN 13
 
+enum Direction {
+  LEFT, RIGHT
+};
+
+const int LUX_THRESHOLD = 1350;
+const int HUE_DISCRIM = 100;
 const int COLOR_RANGE = 6000;
 
 const int SERVO_NEUTRAL = 90;
-const int SERVO_LEFT = 150;
-const int SERVO_RIGHT = 30;
+const int SERVO_LEFT = 180;
+const int SERVO_RIGHT = 0;
 
 const int COLOR_SENSOR_DELAY = 500;
 const int SERVO_DELAY = 500;
@@ -28,6 +35,7 @@ void setup() {
     while (true);
   }
   servo.attach(SERVO_PIN);
+  pinMode(LED_PIN, OUTPUT);
 }
 
 void loop() {
@@ -37,11 +45,8 @@ void loop() {
   tcs.getRawData(&r, &g, &b, &c);
   tcs.setInterrupt(true);  // turn off LED
   //colorTemp = tcs.calculateColorTemperature(r, g, b);
-  //lux = tcs.calculateLux(r, g, b);
-  Serial.print(r); Serial.print("\t");
-  Serial.print(g); Serial.print("\t");
-  Serial.print(b); Serial.print("\t");
-  Serial.println(hue(r, g, b));
+  lux = tcs.calculateLux(r, g, b);
+  int h = hue(r, g, b);
 
 /*
   if (lux > 18000) {
@@ -59,11 +64,40 @@ void loop() {
     servo.write(SERVO_NEUTRAL);
     delay(SERVO_DELAY);
   }*/
-  
-  Serial.println();
+  Serial.print(r); Serial.print("\t");
+  Serial.print(g); Serial.print("\t");
+  Serial.print(b); Serial.print("\t");
+  Serial.print(lux); Serial.print("\t");
+  Serial.println(h);
+  /*if (lux > 1300) {
+    Serial.println("Found a jellybean");
+    digitalWrite(LED_PIN, HIGH);
+    if (h > 90) {
+      Serial.println("Is GOOD bean");
+      sendServo(LEFT);
+    } else {
+      Serial.println("Is BAD bean");
+      sendServo(RIGHT);
+    }
+    delay(1000);
+    digitalWrite(LED_PIN, LOW);
+  }*/
 }
 
-float hue(uint16_t r, uint16_t g, uint16_t b) {
+void sendServo(Direction d) {
+  switch (d) {
+    case LEFT:
+      servo.write(SERVO_LEFT);
+      break;
+    case RIGHT:
+      servo.write(SERVO_RIGHT);
+  }
+  delay(SERVO_DELAY);
+  servo.write(SERVO_NEUTRAL);
+  delay(SERVO_DELAY);
+}
+
+int hue(uint16_t r, uint16_t g, uint16_t b) {
   float R = float(r) / COLOR_RANGE;
   float G = float(g) / COLOR_RANGE;
   float B = float(b) / COLOR_RANGE;
