@@ -10,10 +10,10 @@ enum Direction {
   LEFT, RIGHT
 };
 
-const int DELTA_LUX_THRESHOLD = 75;
-const int TYPICAL_LUX = 1260;
+const int DELTA_LUX_THRESHOLD = 150;
+const int TYPICAL_LUX = 2300;
 const int HUE_DISCRIM = 100;
-const int COLOR_RANGE = 6000;
+const int COLOR_RANGE = 12000;
 
 const int SERVO_NEUTRAL = 90;
 const int SERVO_LEFT = 180;
@@ -24,7 +24,7 @@ const int SERVO_DELAY = 500;
 
 Servo servo;
 
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_101MS, TCS34725_GAIN_4X);
 
 void setup() {
   Serial.begin(9600);
@@ -41,26 +41,29 @@ void setup() {
 
 void loop() {
   uint16_t r, g, b, c, lux;
-  int dlux;
-  tcs.setInterrupt(false);      // turn on LED
-  delay(60);
+  int h, dlux;
+  delay(110);
   tcs.getRawData(&r, &g, &b, &c);
-  tcs.setInterrupt(true);  // turn off LED
-  //colorTemp = tcs.calculateColorTemperature(r, g, b);
+
   lux = tcs.calculateLux(r, g, b);
   dlux = int(lux - TYPICAL_LUX);
-  int h = hue(r, g, b);
-  
+  h = hue(r, g, b);
+
   Serial.print(r); Serial.print("\t");
   Serial.print(g); Serial.print("\t");
   Serial.print(b); Serial.print("\t");
   Serial.print(lux); Serial.print("\t");
-  Serial.print(h); Serial.print("\t");
-  Serial.println(dlux);
-  if (abs(dlux) > DELTA_LUX_THRESHOLD) {
+  Serial.println(h);
+  //Serial.println(dlux);
+  
+  /*if (abs(dlux) > DELTA_LUX_THRESHOLD) {
     Serial.println("Found a jellybean");
     digitalWrite(LED_PIN, HIGH);
     delay(1000);
+
+    tcs.getRawData(&r, &g, &b, &c);
+    h = hue(r, g, b);
+    Serial.print("Hue: "); Serial.print(h); Serial.print("\t");
     if (h > HUE_DISCRIM) {
       Serial.println("Is GOOD bean");
       sendServo(LEFT);
@@ -70,7 +73,7 @@ void loop() {
     }
     delay(1000);
     digitalWrite(LED_PIN, LOW);
-  }
+  }*/
 }
 
 void sendServo(Direction d) {
