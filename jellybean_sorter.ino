@@ -10,7 +10,8 @@ enum Direction {
   LEFT, RIGHT
 };
 
-const int LUX_THRESHOLD = 1350;
+const int DELTA_LUX_THRESHOLD = 75;
+const int TYPICAL_LUX = 1260;
 const int HUE_DISCRIM = 100;
 const int COLOR_RANGE = 6000;
 
@@ -39,40 +40,28 @@ void setup() {
 }
 
 void loop() {
-  uint16_t r, g, b, c, colorTemp, lux;
+  uint16_t r, g, b, c, lux;
+  int dlux;
   tcs.setInterrupt(false);      // turn on LED
   delay(60);
   tcs.getRawData(&r, &g, &b, &c);
   tcs.setInterrupt(true);  // turn off LED
   //colorTemp = tcs.calculateColorTemperature(r, g, b);
   lux = tcs.calculateLux(r, g, b);
+  dlux = int(lux - TYPICAL_LUX);
   int h = hue(r, g, b);
-
-/*
-  if (lux > 18000) {
-    Serial.println("Detected an increase in light");
-    delay(COLOR_SENSOR_DELAY);
-    if (r > 18000) {
-      Serial.println("Detected a left bucket jellybean");
-      servo.write(SERVO_LEFT);
-      delay(SERVO_DELAY);
-    } else {
-      Serial.println("Detected a right bucket jellybean");
-      servo.write(SERVO_RIGHT);
-      delay(SERVO_DELAY);
-    }
-    servo.write(SERVO_NEUTRAL);
-    delay(SERVO_DELAY);
-  }*/
+  
   Serial.print(r); Serial.print("\t");
   Serial.print(g); Serial.print("\t");
   Serial.print(b); Serial.print("\t");
   Serial.print(lux); Serial.print("\t");
-  Serial.println(h);
-  /*if (lux > 1300) {
+  Serial.print(h); Serial.print("\t");
+  Serial.println(dlux);
+  if (abs(dlux) > DELTA_LUX_THRESHOLD) {
     Serial.println("Found a jellybean");
     digitalWrite(LED_PIN, HIGH);
-    if (h > 90) {
+    delay(1000);
+    if (h > HUE_DISCRIM) {
       Serial.println("Is GOOD bean");
       sendServo(LEFT);
     } else {
@@ -81,7 +70,7 @@ void loop() {
     }
     delay(1000);
     digitalWrite(LED_PIN, LOW);
-  }*/
+  }
 }
 
 void sendServo(Direction d) {
